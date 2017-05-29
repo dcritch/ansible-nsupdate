@@ -118,7 +118,7 @@ def main():
 
     module = AnsibleModule(
         argument_spec = dict(
-            state=dict(required=False, default='present', choices=['present', 'absent'], type='str'),
+            state=dict(required=False, default='present', choices=['present', 'absent', 'multiple'], type='str'),
             server=dict(required=True, type='str'),
             key_name=dict(required=False, type='str'),
             key_secret=dict(required=False, type='str', no_log=True),
@@ -157,10 +157,13 @@ def main():
             if success != True:
                 module.fail_json(msg='Failed to delete DNS record')
             result['changed'] = True
-    elif record.state == 'present':
+    elif record.state == 'present' or record.state == 'multiple':
         if not exists:
             if module.check_mode:
                 module.exit_json(changed=True)
+            success = record.create_record()
+            result['changed'] = True
+        elif exists == 2 and record.state == 'multiple':
             success = record.create_record()
             result['changed'] = True
         elif exists == 2:
